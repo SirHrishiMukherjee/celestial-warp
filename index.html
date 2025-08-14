@@ -3,25 +3,40 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Celestial • Simulonic × Infosophic Lab • Intent Sextant (Hardened)</title>
+<title>Celestial • Intent Sextant + WarpDock</title>
 <style>
   :root{--bg:#0f1115;--panel:#161a22;--card:#1c2230;--text:#e8eef7;--muted:#9bb0c8;--accent:#61dafb;--good:#6ee7a6;--warn:#fbbf24;--grid:#2a3242;--hl:#9f7aea;--bad:#f87171}
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;background:linear-gradient(180deg,#0c0f14,#0f1115);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
-  header{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #202636;background:rgba(22,26,34,.85);backdrop-filter:blur(6px)}
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #202636;background:rgba(22,26,34,.85);backdrop-filter:blur(6px)}
   .brand{display:flex;gap:10px;align-items:center}
   .logo{width:36px;height:36px;border-radius:10px;background:radial-gradient(circle at 30% 30%,#7cfcff,#4c50ff 45%,#1f1340 70%);box-shadow:0 0 24px rgba(97,218,251,.35),inset 0 0 18px rgba(255,255,255,.12)}
   .title{font-weight:700}.sub{font-size:12px;color:var(--muted)}
-  #stageWrap{position:relative;width:100%;height:calc(100vh - 64px)}
+
+  /* ---- New grid layout ---- */
+  #app{display:grid;gap:14px;padding:12px;
+       grid-template-columns:1fr 1fr;
+       grid-template-rows:minmax(440px,40vh) auto;
+       grid-template-areas:
+         "sky warp"
+         "controls controls";}
+  #skyCard{grid-area:sky}
+  #warpCard{grid-area:warp}
+  #controlsRow{grid-area:controls; display:grid; gap:14px; grid-template-columns:1fr 1fr;}
+  @media (max-width: 1200px){
+    #app{grid-template-columns:1fr; grid-template-rows:minmax(360px,40vh) minmax(360px,40vh) auto;
+         grid-template-areas:"sky" "warp" "controls";}
+    #controlsRow{grid-template-columns:1fr}
+  }
+
+  /* ---- Cards / visuals ---- */
+  .card{background:rgba(22,26,34,.9);border:1px solid #232a3a;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25),inset 0 0 0 1px rgba(255,255,255,.02)}
+  .visual{position:relative;min-height:100%;height:100%}
+  .visualPad{padding:10px;height:100%}
+  .stageWrap{position:relative;width:100%;height:100%}
   canvas{display:block;width:100%;height:100%;background:linear-gradient(180deg,#0b0e17,#0a0d14)}
-  .panel{position:absolute;top:12px;left:12px;width:520px;max-width:calc(100% - 24px);border:1px solid #232a3a;background:rgba(22,26,34,.9);border-radius:14px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.25),inset 0 0 0 1px rgba(255,255,255,.02)}
-  .panel .h{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:2px 0 8px}
-  .row{display:flex;gap:10px;align-items:center;margin:8px 0}
-  .row input[type="range"]{flex:1}
-  .btn{padding:7px 10px;background:var(--card);border:1px solid #2a3147;color:var(--text);border-radius:10px;cursor:pointer;font-size:13px}
-  .btn:hover{border-color:#3a425e}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
-  textarea.code{width:100%;min-height:150px;resize:vertical;border:1px solid #283048;border-radius:12px;background:#151a26;color:#e8eef7;padding:10px;outline:none}
+
+  /* Overlays that stay on the sky canvas (legend/stats) */
   .legend{position:absolute;right:12px;top:12px;background:rgba(16,20,30,.78);padding:8px 10px;border:1px solid #27304a;border-radius:10px;font-size:12px}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;margin:2px 2px;border:1px solid #2a3250}
   .pill.blue{background:rgba(97,218,251,.12);color:#bdefff}
@@ -33,17 +48,27 @@
   .stats{position:absolute;right:12px;bottom:12px;background:rgba(16,20,30,.78);padding:10px;border:1px solid #27304a;border-radius:10px;font-size:12px}
   .statLine{display:flex;justify-content:space-between;gap:12px;margin:4px 0}
   .muted{color:var(--muted)}
+
+  /* ---- Controls styling (bottom row) ---- */
+  .panel{border:1px solid #232a3a;background:rgba(22,26,34,.9);border-radius:14px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.25),inset 0 0 0 1px rgba(255,255,255,.02)}
+  .panel .h{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:2px 0 8px}
+  .row{display:flex;gap:10px;align-items:center;margin:8px 0}
+  .row input[type="range"]{flex:1}
+  .btn{padding:7px 10px;background:var(--card);border:1px solid #2a3147;color:var(--text);border-radius:10px;cursor:pointer;font-size:13px}
+  .btn:hover{border-color:#3a425e}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+  textarea.code{width:100%;min-height:150px;resize:vertical;border:1px solid #283048;border-radius:12px;background:#151a26;color:#e8eef7;padding:10px;outline:none}
   .outlookGrid{display:grid;grid-template-columns:1fr auto;gap:6px;background:rgba(21,26,38,.7);border:1px solid #27304a;border-radius:10px;padding:8px;margin:8px 0}
   .toggle{padding:4px 8px;border-radius:999px;border:1px solid #2a3147;cursor:pointer;font-size:12px;background:linear-gradient(180deg,#1f2a44,#1a2440)}
   .toggle.pos{border-color:#2b6b54}.toggle.neg{border-color:#6b2b2b}
   .swatch{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
   .note{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.35}
-  .lensHUD{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;background:rgba(16,20,30,.78);padding:8px 10px;border:1px solid #27304a;border-radius:10px;font-size:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .chk{display:flex;align-items:center;gap:8px;font-size:12px}
-  .log{margin-top:8px;border:1px solid #283048;border-radius:12px;background:#0f1524;max-height:180px;overflow:auto;padding:8px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#cfe8ff}
-  .log .line{border-bottom:1px dashed rgba(255,255,255,.06);padding:6px 0}
-  .log .tag{display:inline-block;padding:2px 6px;border-radius:999px;border:1px solid #2a3250;margin-right:6px}
-  .tag.exec{background:rgba(159,122,234,.15);color:#e1d1ff}.tag.ctx{background:rgba(97,218,251,.12);color:#bdefff}
+
+  /* WarpDock title row */
+  #warpHostTitle{display:flex;align-items:center;gap:10px;margin:6px 0 10px}
+  #warpHostTitle .dot{width:7px;height:7px;border-radius:50%;background:#79ffe1;box-shadow:0 0 12px rgba(121,255,225,.45)}
+  #warpHostTitle .t{font-weight:800;letter-spacing:.4px}
+
 </style>
 </head>
 <body>
@@ -58,86 +83,128 @@
   <div class="sub">Infosophic: Gösta Greimel • Simulonic: Hrishi Mukherjee • Integration: Greimel & Mukherjee • OBT: Oliver Boeschenstein</div>
 </header>
 
-<div id="stageWrap">
-  <canvas id="stage"></canvas>
+<div id="app">
+  <!-- Upper left: Skydome -->
+  <div id="skyCard" class="card visual">
+    <div class="visualPad">
+      <div class="stageWrap" id="stageWrap">
+        <canvas id="stage"></canvas>
 
-  <div class="panel" id="ctrlPanel">
-    <div class="h">Observer & Sextant</div>
-    <div class="row">
-      <span class="muted">Observer Lon</span><input id="rngObsLon" type="range" min="-180" max="180" step="1"><span class="mono" id="labObsLon"></span>
+        <!-- Keep visual legend & stats over the canvas -->
+        <div class="legend">
+          <span class="pill blue">ART t-field</span>
+          <span class="pill green">Lock-on</span>
+          <span class="pill purple">Infosophic ⇄ Simulonic</span>
+          <span class="pill gold">ds² gauges</span>
+          <span class="pill pos">Optimistic</span>
+          <span class="pill neg">Pessimistic</span>
+        </div>
+        <div class="stats" id="statsBox">
+          <div class="statLine"><span class="muted">ds² (Green)</span><span class="mono" id="statG">0.000</span></div>
+          <div class="statLine"><span class="muted">ds² (Vacuum)</span><span class="mono" id="statV">0.000</span></div>
+          <div class="statLine"><span class="muted">Locked</span><span class="mono" id="statL">0</span></div>
+          <div class="statLine"><span class="muted">τ</span><span class="mono" id="statT">0.00</span></div>
+          <div class="statLine"><span class="muted">Head k/N</span><span class="mono" id="statK">0/0</span></div>
+          <div class="statLine"><span class="muted">Head mass</span><span class="mono" id="statMass">0.00</span></div>
+          <div class="statLine"><span class="muted">Optimistic</span><span class="mono" id="statPos">0</span></div>
+          <div class="statLine"><span class="muted">Pessimistic</span><span class="mono" id="statNeg">0</span></div>
+        </div>
+      </div>
     </div>
-    <div class="row">
-      <span class="muted">Observer Lat</span><input id="rngObsLat" type="range" min="-80" max="80" step="1"><span class="mono" id="labObsLat"></span>
-    </div>
-    <div class="row">
-      <div class="chk"><input id="chkAutoSextant" type="checkbox"><label for="chkAutoSextant">Auto Sextant Lock</label></div>
-      <span class="muted">Lock speed</span>
-      <input id="rngAutoSpeed" type="range" min="0.02" max="0.5" step="0.01" value="0.15" style="flex:1">
-      <span class="mono" id="labAutoSpeed">0.15</span>
-    </div>
-
-    <div class="h">CII Intent Vector (sky)</div>
-    <div class="row"><span class="muted">Bearing (az°)</span><input id="rngBearing" type="range" min="0" max="360" step="1"><span class="mono" id="labBearing"></span></div>
-    <div class="row"><span class="muted">Elevation (alt°)</span><input id="rngAlt" type="range" min="0" max="90" step="1"><span class="mono" id="labAlt"></span></div>
-    <div class="row"><span class="muted">Magnitude</span><input id="rngMag" type="range" min="0" max="1" step="0.01" value="0.7"><span class="mono" id="labMag">0.70</span></div>
-    <div class="row"><span class="muted">Gain</span><input id="rngGain" type="range" min="0" max="2" step="0.01" value="0.6"><span class="mono" id="labGain">0.60</span></div>
-
-    <div class="h">Dynamic Pareto & ART</div>
-    <div class="row"><span class="muted">τ (manual)</span><input id="rngTau" type="range" min="0.05" max="1.5" step="0.01"><span class="mono" id="labTau"></span></div>
-    <div class="row chk"><input id="chkAutoPareto" type="checkbox" /><label for="chkAutoPareto">Auto Pareto (keep ~20% head for target mass)</label></div>
-    <div class="row"><span class="muted">Target head mass</span><input id="rngTargetMass" type="range" min="0.50" max="0.95" step="0.01" style="flex:1"><span class="mono" id="labTargetMass"></span></div>
-
-    <div class="row"><span class="muted">ν (DOF)</span><input id="rngNu" type="range" min="1" max="12" step="1"><span class="mono" id="labNu"></span></div>
-    <div class="row"><span class="muted">Points</span><input id="rngPts" type="range" min="60" max="3000" step="20"><span class="mono" id="labPts"></span></div>
-    <div class="row"><span class="muted">Mood Strength</span><input id="rngMood" type="range" min="0" max="2" step="0.05" style="flex:1"><span class="mono" id="labMood"></span></div>
-    <div class="row"><button class="btn" id="btnShuffle">Shuffle Seed</button><button class="btn" id="btnClear">Clear Lock-ons</button></div>
-
-    <div class="h">Outlooks (per dimension)</div>
-    <div id="outlookGrid" class="outlookGrid"></div>
-    <div class="note">Simulation labels only—abstract categories to test geometry. No real-world judgments are implied.</div>
-
-    <div class="h">SimuLang Hook (mini) + Runtime</div>
-    <textarea id="simTxt" class="code mono" spellcheck="false"></textarea>
-    <div class="row">
-      <div class="chk"><input id="chkAutoExec" type="checkbox"><label for="chkAutoExec">Auto-exec on lock & lens</label></div>
-      <button class="btn" id="btnRun">Run Now</button>
-      <button class="btn" id="btnReset">Reset</button>
-    </div>
-    <div id="runtimeLog" class="log"></div>
-    <div class="row"><button class="btn" id="btnApply">Apply SimuLang</button></div>
   </div>
 
-  <div class="legend">
-    <span class="pill blue">ART t-field</span>
-    <span class="pill green">Lock-on</span>
-    <span class="pill purple">Infosophic ⇄ Simulonic</span>
-    <span class="pill gold">ds² gauges</span>
-    <span class="pill pos">Optimistic</span>
-    <span class="pill neg">Pessimistic</span>
+  <!-- Upper right: Warp stage (shadow DOM draws here) -->
+  <div id="warpCard" class="card visual">
+    <div class="visualPad">
+      <div id="warpHostTitle"><div class="dot"></div>
+        <div class="t">WarpDock • New Canada Warp Drive</div>
+        <div class="sub" style="margin-left:auto;">CII routing • particle flux • intent bias</div>
+      </div>
+      <div id="warpMount"></div>
+    </div>
   </div>
 
-  <div class="stats" id="statsBox">
-    <div class="statLine"><span class="muted">ds² (Green)</span><span class="mono" id="statG">0.000</span></div>
-    <div class="statLine"><span class="muted">ds² (Vacuum)</span><span class="mono" id="statV">0.000</span></div>
-    <div class="statLine"><span class="muted">Locked</span><span class="mono" id="statL">0</span></div>
-    <div class="statLine"><span class="muted">τ</span><span class="mono" id="statT">0.00</span></div>
-    <div class="statLine"><span class="muted">Head k/N</span><span class="mono" id="statK">0/0</span></div>
-    <div class="statLine"><span class="muted">Head mass</span><span class="mono" id="statMass">0.00</span></div>
-    <div class="statLine"><span class="muted">Optimistic</span><span class="mono" id="statPos">0</span></div>
-    <div class="statLine"><span class="muted">Pessimistic</span><span class="mono" id="statNeg">0</span></div>
-  </div>
+  <!-- Bottom row: all controls (left = Sextant/Sky; right = Warp) -->
+  <div id="controlsRow">
+    <div id="ctrlPanel" class="panel">
+      <div class="h">Observer & Sextant</div>
+      <div class="row">
+        <span class="muted">Observer Lon</span><input id="rngObsLon" type="range" min="-180" max="180" step="1"><span class="mono" id="labObsLon"></span>
+      </div>
+      <div class="row">
+        <span class="muted">Observer Lat</span><input id="rngObsLat" type="range" min="-80" max="80" step="1"><span class="mono" id="labObsLat"></span>
+      </div>
+      <div class="row">
+        <div class="row" style="flex:1">
+          <div class="row" style="gap:12px;flex-wrap:wrap">
+            <label class="muted" style="display:flex;align-items:center;gap:8px"><input id="chkAutoSextant" type="checkbox"> Auto Sextant Lock</label>
+            <span class="muted">Lock speed</span>
+            <input id="rngAutoSpeed" type="range" min="0.02" max="0.5" step="0.01" value="0.15" style="flex:1">
+            <span class="mono" id="labAutoSpeed">0.15</span>
+          </div>
+        </div>
+      </div>
 
-  <div class="lensHUD">
-    <button class="btn" id="btnLensMode">Lens: Infosophic (I)</button>
-    <span class="muted">Angular radius</span>
-    <input id="rngLensR" type="range" min="5" max="60" step="1" style="width:200px">
-    <span class="mono" id="labLensR">20°</span>
-    <span class="muted">Drag the circle • Press S to switch to Simulonic</span>
+      <div class="h">CII Intent Vector (sky)</div>
+      <div class="row"><span class="muted">Bearing (az°)</span><input id="rngBearing" type="range" min="0" max="360" step="1"><span class="mono" id="labBearing"></span></div>
+      <div class="row"><span class="muted">Elevation (alt°)</span><input id="rngAlt" type="range" min="0" max="90" step="1"><span class="mono" id="labAlt"></span></div>
+      <div class="row"><span class="muted">Magnitude</span><input id="rngMag" type="range" min="0" max="1" step="0.01" value="0.7"><span class="mono" id="labMag">0.70</span></div>
+      <div class="row"><span class="muted">Gain</span><input id="rngGain" type="range" min="0" max="2" step="0.01" value="0.6"><span class="mono" id="labGain">0.60</span></div>
+
+      <div class="h">Dynamic Pareto & ART</div>
+      <div class="row"><span class="muted">τ (manual)</span><input id="rngTau" type="range" min="0.05" max="1.5" step="0.01"><span class="mono" id="labTau"></span></div>
+      <div class="row"><label class="muted" style="display:flex;align-items:center;gap:8px"><input id="chkAutoPareto" type="checkbox" /> Auto Pareto (keep ~20% head for target mass)</label></div>
+      <div class="row"><span class="muted">Target head mass</span><input id="rngTargetMass" type="range" min="0.50" max="0.95" step="0.01" style="flex:1"><span class="mono" id="labTargetMass"></span></div>
+
+      <div class="row"><span class="muted">ν (DOF)</span><input id="rngNu" type="range" min="1" max="12" step="1"><span class="mono" id="labNu"></span></div>
+      <div class="row"><span class="muted">Points</span><input id="rngPts" type="range" min="60" max="3000" step="20"><span class="mono" id="labPts"></span></div>
+      <div class="row"><span class="muted">Mood Strength</span><input id="rngMood" type="range" min="0" max="2" step="0.05" style="flex:1"><span class="mono" id="labMood"></span></div>
+      <div class="row"><button class="btn" id="btnShuffle">Shuffle Seed</button><button class="btn" id="btnClear">Clear Lock-ons</button></div>
+
+      <div class="h">Outlooks (per dimension)</div>
+      <div id="outlookGrid" class="outlookGrid"></div>
+      <div class="note">Simulation labels only—abstract categories to test geometry. No real-world judgments are implied.</div>
+
+      <div class="h">Lens</div>
+      <div class="row">
+        <button class="btn" id="btnLensMode">Lens: Infosophic (I)</button>
+        <span class="muted">Angular radius</span>
+        <input id="rngLensR" type="range" min="5" max="60" step="1" style="flex:1;max-width:240px">
+        <span class="mono" id="labLensR">20°</span>
+      </div>
+
+      <div class="h">SimuLang Hook (mini) + Runtime</div>
+      <textarea id="simTxt" class="code mono" spellcheck="false"></textarea>
+      <div class="row">
+        <label class="muted" style="display:flex;align-items:center;gap:8px"><input id="chkAutoExec" type="checkbox"> Auto-exec on lock & lens</label>
+        <button class="btn" id="btnRun">Run Now</button>
+        <button class="btn" id="btnReset">Reset</button>
+      </div>
+      <div id="runtimeLog" class="log" style="max-height:180px;overflow:auto;border:1px solid #283048;border-radius:12px;background:#0f1524;padding:8px;font:12px/1.5 ui-monospace;color:#cfe8ff"></div>
+      <div class="row"><button class="btn" id="btnApply">Apply SimuLang</button></div>
+    </div>
+
+    <div id="warpControls" class="panel">
+      <!-- Filled by script with WarpDock controls -->
+    </div>
   </div>
 </div>
 
 <script>
-// --- roundRect polyfill for older canvases ---
+/* ====== Canvas utilities & sizing ====== */
+const $ = id => { const el = document.getElementById(id); if(!el) throw new Error('Missing element '+id); return el; };
+const stage=$('stage'), ctx=stage.getContext('2d');
+
+function fitCanvas(){
+  const pad = $('stageWrap');
+  const dpr=Math.max(1,devicePixelRatio||1);
+  stage.width=Math.floor(pad.clientWidth*dpr);
+  stage.height=Math.floor(pad.clientHeight*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+addEventListener('resize',fitCanvas,{passive:true});
+
+/* ====== roundRect polyfill ====== */
 if (!CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
     const rr = Array.isArray(r) ? r : [r, r, r, r].map(v => Math.max(0, v || 0));
@@ -155,9 +222,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
   };
 }
 
-/* ===== DOM safe getters ===== */
-const $ = id => { const el = document.getElementById(id); if(!el) throw new Error('Missing element '+id); return el; };
-const stage=$('stage'), ctx=stage.getContext('2d');
+/* ===== DOM refs for controls ===== */
 const E={
   rngObsLon:$('rngObsLon'), labObsLon:$('labObsLon'),
   rngObsLat:$('rngObsLat'), labObsLat:$('labObsLat'),
@@ -174,12 +239,7 @@ const E={
   statG:$('statG'), statV:$('statV'), statL:$('statL'), statT:$('statT'), statK:$('statK'), statMass:$('statMass'), statPos:$('statPos'), statNeg:$('statNeg')
 };
 
-/* ===== Canvas fit ===== */
-function fitCanvas(){const h=document.querySelector('header').offsetHeight||64; $('stageWrap').style.height=`calc(100vh - ${h}px)`;
-  const dpr=Math.max(1,devicePixelRatio||1); stage.width=Math.floor(stage.clientWidth*dpr); stage.height=Math.floor(stage.clientHeight*dpr); ctx.setTransform(dpr,0,0,dpr,0,0);} 
-addEventListener('resize',fitCanvas,{passive:true}); fitCanvas();
-
-/* ===== Math utils ===== */
+/* ===== Math & helpers ===== */
 const toRad=d=>d*Math.PI/180, toDeg=r=>r*180/Math.PI;
 function rng(seed){let t=seed>>>0; return ()=>{t+=0x6D2B79F5; let r=Math.imul(t^(t>>>15),1|t); r^=r+Math.imul(r^(r>>>7),61|r); return ((r^(r>>>14))>>>0)/4294967296;};}
 function randn(r){let u=1-r(),v=1-r(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);} 
@@ -187,18 +247,15 @@ function chiSquare(df,r){let s=0;for(let i=0;i<df;i++){const z=randn(r); s+=z*z;
 function studentT(df,r){const z=randn(r); return z/Math.sqrt(chiSquare(df,r)/df);} 
 function softmax(a,t=1){const m=Math.max(...a); const ex=a.map(v=>Math.exp((v-m)/Math.max(1e-6,t))); const s=ex.reduce((x,y)=>x+y,0); return ex.map(e=>e/s);} 
 
-/* ===== Projections (sky only) ===== */
+/* ===== Sky projection ===== */
 function projBase(){const R=Math.min(stage.clientWidth,stage.clientHeight)*0.42;const cx=stage.clientWidth/2,cy=stage.clientHeight/2;return {R,cx,cy};}
-function sphToAltAz(lon,lat,obsLon,obsLat){const lam=toRad(lon),phi=toRad(lat),lam0=toRad(obsLon),phi0=toRad(obsLat);
-  const sinEl=Math.sin(phi0)*Math.sin(phi)+Math.cos(phi0)*Math.cos(phi)*Math.cos(lam-lam0);
-  const Az=Math.atan2(Math.sin(lam-lam0)*Math.cos(phi), Math.cos(phi0)*Math.sin(phi)-Math.sin(phi0)*Math.cos(phi)*Math.cos(lam-lam0));
-  const alt=Math.asin(Math.max(-1,Math.min(1,sinEl))); const c=Math.acos(Math.max(-1,Math.min(1,sinEl)));
-  return {alt:toDeg(alt), az:(toDeg(Az)+360)%360, c:toDeg(c)};}
 function projSky(az,alt){const {R,cx,cy}=projBase();const k=R*0.9/90;const r=(90-alt)*k;const th=toRad(az);const x=cx+r*Math.sin(th),y=cy-r*Math.cos(th);return {x,y,visible:alt>=0,rho:r,cx,cy,R:R*0.9};}
 function invSky(x,y){const {R,cx,cy}=projBase();const k=R*0.9/90;const dx=x-cx,dy=y-cy;const r=Math.hypot(dx,dy);if(r>R*0.9+2) return null;const az=((toDeg(Math.atan2(dx,-dy))+360)%360);const alt=90-r/k;return {az,alt};}
+function skyVec(azDeg,altDeg){ const az=toRad(azDeg), alt=toRad(altDeg); const c=Math.cos(alt); return {x:c*Math.sin(az), y:c*Math.cos(az), z:Math.sin(alt)}; }
+function dot(a,b){return a.x*b.x+a.y*b.y+a.z*b.z;}
 
 /* ===== State ===== */
-const DIMENSIONS=['Dynasty','Empire','Family', 'Field'];
+const DIMENSIONS=['Dynasty','Empire','Family','Field'];
 let outlook=Object.fromEntries(DIMENSIONS.map(d=>[d,+1]));
 let seed=42, points=[], weights=[], lockSet=new Set();
 const globe={lon0:0,lat0:15,dragging:false,lastX:0,lastY:0};
@@ -206,11 +263,30 @@ const lens={az:0,alt:60, ang:20, mode:'infosophic', dragging:false};
 const auto={enabled:false, speed:0.15, targetAz:null, targetAlt:null, cooldown:0};
 const intent={bearing:0, alt:45, mag:0.7, gain:0.6};
 let cfg;
-
 E.labAutoSpeed.textContent=auto.speed.toFixed(2);
 
 /* ===== SimuLang ===== */
-function defaultSimuLang(){return `# SimuLang (runtime)\npareto.tau = 0.55\nquality.q = 1.00\nart.nu = 3\nart.points = 900\nlockon.k = 8\nmood.strength = 1.0\nauto.pareto = true\ntarget.mass = 0.80\n# Intent Vector (sky)\nintent.bearing = 0\nintent.alt = 45\nintent.magnitude = 0.70\nintent.gain = 0.60\n# observer\nobserver.lon = 0\nobserver.lat = 15\n# runtime:\nexecute.mode = auto\nexecute.metric = lens_intensity\n`; }
+function defaultSimuLang(){return `# SimuLang (runtime)
+pareto.tau = 0.55
+quality.q = 1.00
+art.nu = 3
+art.points = 900
+lockon.k = 8
+mood.strength = 1.0
+auto.pareto = true
+target.mass = 0.80
+# Intent Vector (sky)
+intent.bearing = 0
+intent.alt = 45
+intent.magnitude = 0.70
+intent.gain = 0.60
+# observer
+observer.lon = 0
+observer.lat = 15
+# runtime:
+execute.mode = auto
+execute.metric = lens_intensity
+`; }
 function parseSimuLang(src){
   const c={paretoTau:0.55,qualityQ:1.0,artNu:3,artPoints:900,lockTopK:8,moodStrength:1.0,autoPareto:true,targetMass:0.80,obsLon:0,obsLat:15,intBearing:0,intAlt:45,intMag:0.7,intGain:0.6,execMode:'auto',execMetric:'lens_intensity'};
   for(const raw of src.split('\n')){const l=raw.trim(); if(!l||l.startsWith('#')) continue; const m=l.match(/^([a-z._]+)\s*=\s*(.+)$/i); if(!m) continue; const k=m[1].toLowerCase(), v=m[2].trim();
@@ -231,7 +307,6 @@ function parseSimuLang(src){
     else if(k==='execute.mode') c.execMode=v.toLowerCase();
     else if(k==='execute.metric') c.execMetric=v.toLowerCase();
   }
-  // harden
   if(!Number.isFinite(c.artPoints)||c.artPoints<10) c.artPoints=900;
   if(!Number.isFinite(c.artNu)||c.artNu<1) c.artNu=3;
   if(!Number.isFinite(c.paretoTau)||c.paretoTau<=0) c.paretoTau=0.55;
@@ -274,29 +349,24 @@ function syncControls(){
   E.rngAutoSpeed.value=auto.speed; E.labAutoSpeed.textContent=auto.speed.toFixed(2);
 }
 
-/* ===== Field generation & weights (sky only, with Intent Vector) ===== */
-function skyVec(azDeg,altDeg){ const az=toRad(azDeg), alt=toRad(altDeg); const c=Math.cos(alt); return {x:c*Math.sin(az), y:c*Math.cos(az), z:Math.sin(alt)}; }
-function dot(a,b){return a.x*b.x+a.y*b.y+a.z*b.z;}
+/* ===== Field generation & weights ===== */
 function recomputeWeights(){weights=softmax(points.map(p=>p.sal),Math.max(0.05,cfg.paretoTau));}
 function buildART(){
   const r=rng(seed); points=[]; let pos=0,neg=0;
-  const centerAz=lens.az, centerAlt=lens.alt; // lens-centered sampling notion
-  const scaleAz=40, scaleAlt=25;
+  const centerAz=lens.az, centerAlt=lens.alt; const scaleAz=40, scaleAlt=25;
   const V=skyVec(intent.bearing, intent.alt);
   for(let i=0;i<cfg.artPoints;i++){
     const dim=DIMENSIONS[i%DIMENSIONS.length];
     const daz=studentT(cfg.artNu,r)*scaleAz, dalt=studentT(cfg.artNu,r)*scaleAlt;
     let az=(centerAz+daz+360)%360, alt=Math.max(0,Math.min(90,centerAlt+dalt));
     const P=skyVec(az,alt);
-    const align = Math.max(0, dot(V,P)); // [0,1]
+    const align = Math.max(0, dot(V,P));
     const angDist = Math.acos(Math.max(-1, Math.min(1, dot(skyVec(centerAz,centerAlt), P) )));
     const base=1/(1+(angDist/(Math.PI/4))**2);
     const mood=outlook[dim]||+1;
     const moodGain=1+cfg.moodStrength*(mood*0.25);
     const sal=base * (1 + intent.mag * intent.gain * align) * moodGain;
-    // map back to pseudo lon/lat for reuse of projection API (treat az as lon, 90-colat as lat)
-    const lon=az; const lat=alt; 
-    points.push({lon,lat,sal,dim,mood});
+    points.push({lon:az,lat:alt,sal,dim,mood});
     if(mood>=0) pos++; else neg++;
   }
   const maxS=points.reduce((m,p)=>Math.max(m,p.sal),1e-6); for(const p of points){p.sal/=maxS;}
@@ -321,7 +391,6 @@ function lensScores(){
   let scores=new Float32Array(points.length), sum=0;
   for(let i=0;i<points.length;i++){
     const P=projSky(points[i].lon,points[i].lat); if(P.visible===false){scores[i]=0; continue;}
-    // angular distance in sky between lens center and point
     const ang= Math.acos( Math.max(-1, Math.min(1, dot(skyVec(lens.az,lens.alt), skyVec(points[i].lon, points[i].lat)) )) );
     const angDeg = toDeg(ang);
     if(angDeg>lens.ang){scores[i]=0;continue;}
@@ -335,11 +404,11 @@ function lensScores(){
 function headStatsForTarget(target){const arr=weights.slice().sort((a,b)=>b-a); let cum=0,k=0; for(k=0;k<arr.length;k++){cum+=arr[k]; if(cum>=target) break;} return {k:k+1,headFrac:(k+1)/arr.length,mass:Math.min(1,cum)};}
 function autoAdjustTau(dt){const {headFrac}=headStatsForTarget(cfg.targetMass); const err=headFrac-0.20; const step=-1.0*err*dt; cfg.paretoTau=Math.min(1.5,Math.max(0.05,cfg.paretoTau+step)); E.rngTau.value=cfg.paretoTau; E.labTau.textContent=cfg.paretoTau.toFixed(2); E.statT.textContent=cfg.paretoTau.toFixed(2); recomputeWeights();}
 
-/* ===== Drawing (sky only) ===== */
+/* ===== Drawing (sky) ===== */
 function drawParetoBar(){ if(weights.length===0) return; const x=12,y=12,W=320,H=50; ctx.save(); ctx.fillStyle='rgba(16,20,30,.78)'; ctx.strokeStyle='#27304a'; ctx.lineWidth=1; ctx.beginPath(); ctx.roundRect(x,y,W,H,10); ctx.fill(); ctx.stroke();
   const arr=weights.slice().sort((a,b)=>b-a); let cum=0,kStar=arr.length; for(let i=0;i<arr.length;i++){cum+=arr[i]; if(cum>=cfg.targetMass){kStar=i+1; break;}} const headFrac=kStar/arr.length, headW=Math.floor(W*headFrac);
   ctx.fillStyle='rgba(110,231,166,.35)'; ctx.fillRect(x+1,y+H-16,headW-2,10); ctx.fillStyle='rgba(97,218,251,.25)'; ctx.fillRect(x+headW,y+H-16,W-headW-1,10);
-  ctx.fillStyle='#cfe8ff'; ctx.font='12px ui-monospace'; ctx.fillText(`Pareto (runtime) — τ=${cfg.paretoTau.toFixed(2)} • head ${kStar}/${arr.length} (${(headFrac*100).toFixed(1)}%) • mass ${Math.min(cum,1).toFixed(2)}`, x+8, y+18);
+  ctx.fillStyle='#cfe8ff'; ctx.font='12px ui-monospace'; ctx.fillText(`Pareto — τ=${cfg.paretoTau.toFixed(2)} • head ${kStar}/${arr.length} (${(headFrac*100).toFixed(1)}%) • mass ${Math.min(cum,1).toFixed(2)}`, x+8, y+18);
   E.statK.textContent=`${kStar}/${arr.length}`; E.statMass.textContent=Math.min(cum,1).toFixed(2); ctx.restore(); }
 
 function drawSky(){
@@ -361,7 +430,6 @@ function drawSky(){
   renderPoints(); drawLensSky();
   E.statG.textContent=ds.g.toFixed(3); E.statV.textContent=ds.v.toFixed(3);
 }
-
 function lensPathSky(){
   const steps=180,alpha=lens.ang; ctx.beginPath();
   for(let i=0;i<=steps;i++){
@@ -391,7 +459,6 @@ function drawLensSky(){
   ctx.fillStyle='rgba(16,20,30,.85)'; ctx.strokeStyle='#27304a'; ctx.lineWidth=1; ctx.font='12px ui-monospace';
   const w=ctx.measureText(text).width+12,h=20; ctx.beginPath(); ctx.roundRect(Pc.x-w/2,Pc.y-30,w,h,6); ctx.fill(); ctx.stroke(); ctx.fillStyle='#cfe8ff'; ctx.fillText(text,Pc.x-w/2+6,Pc.y-16);
 }
-
 function renderPoints(){
   let posCount=0,negCount=0;
   for(let i=0;i<points.length;i++){
@@ -451,7 +518,7 @@ function render(t){
   requestAnimationFrame(render);
 }
 
-/* ===== Interaction (sky only) ===== */
+/* ===== Interaction (sky) ===== */
 stage.addEventListener('mousedown', e=>{
   const r=stage.getBoundingClientRect(); const x=e.clientX-r.left, y=e.clientY-r.top;
   const inv=invSky(x,y); if(inv){ const ang= Math.acos( Math.max(-1, Math.min(1, dot(skyVec(inv.az,inv.alt), skyVec(lens.az, lens.alt)) )) ); if(toDeg(ang)<=lens.ang){ lens.dragging=true; } else { globe.dragging=true; globe.lastX=x; globe.lastY=y; } }
@@ -471,7 +538,7 @@ stage.addEventListener('click', e=>{
   if(best>=0){ if(lockSet.has(best)) lockSet.delete(best); else lockSet.add(best); computeSkyAutoTarget(); maybeAutoExec(); }
 });
 
-/* ===== Controls ===== */
+/* ===== Controls (sky) ===== */
 E.rngObsLon.addEventListener('input', e=>{ globe.lon0=parseFloat(e.target.value); E.labObsLon.textContent=`${Math.round(globe.lon0)}°`; buildART(); ensurePoints(); computeSkyAutoTarget(); });
 E.rngObsLat.addEventListener('input', e=>{ globe.lat0=parseFloat(e.target.value); E.labObsLat.textContent=`${Math.round(globe.lat0)}°`; buildART(); ensurePoints(); computeSkyAutoTarget(); });
 
@@ -490,7 +557,6 @@ E.rngLensR.addEventListener('input', e=>{ lens.ang=parseInt(e.target.value,10); 
 E.chkAutoSextant.addEventListener('change', e=>{ auto.enabled=e.target.checked; if(auto.enabled){ computeSkyAutoTarget(); } });
 E.rngAutoSpeed.addEventListener('input', e=>{ auto.speed=parseFloat(e.target.value); E.labAutoSpeed.textContent=auto.speed.toFixed(2); });
 
-// Intent vector controls
 E.rngBearing.addEventListener('input', e=>{ intent.bearing=parseFloat(e.target.value); E.labBearing.textContent=`${Math.round(intent.bearing)}°`; buildART(); ensurePoints(); computeSkyAutoTarget(); });
 E.rngAlt.addEventListener('input', e=>{ intent.alt=parseFloat(e.target.value); E.labAlt.textContent=`${Math.round(intent.alt)}°`; buildART(); ensurePoints(); computeSkyAutoTarget(); });
 E.rngMag.addEventListener('input', e=>{ intent.mag=parseFloat(e.target.value); E.labMag.textContent=intent.mag.toFixed(2); buildART(); ensurePoints(); computeSkyAutoTarget(); });
@@ -500,8 +566,9 @@ E.btnApply.addEventListener('click', ()=>{ const p=parseSimuLang(E.simTxt.value)
 E.btnReset.addEventListener('click', ()=>{ E.simTxt.value=defaultSimuLang(); cfg=parseSimuLang(E.simTxt.value); intent.bearing=cfg.intBearing; intent.alt=cfg.intAlt; intent.mag=cfg.intMag; intent.gain=cfg.intGain; syncControls(); buildART(); ensurePoints(); computeSkyAutoTarget(); maybeAutoExec(); });
 E.btnRun.addEventListener('click', ()=>{ const c=contextSnapshot(); const ex=executeSimuLang(c); appendLog(c,ex); });
 
-/* ===== Init ===== */
-function init(){
+/* ===== Init (Celestial) ===== */
+function initCelestial(){
+  fitCanvas();
   E.simTxt.value=defaultSimuLang();
   cfg=parseSimuLang(E.simTxt.value);
   syncControls();
@@ -511,7 +578,481 @@ function init(){
   computeSkyAutoTarget();
   requestAnimationFrame(render);
 }
-init();
+initCelestial();
+
+/* ===== WarpDock: stage in shadow, controls in bottom-right panel ===== */
+(function mountWarpDock(){
+  const mount = $('warpMount');
+  const root = mount.attachShadow({mode:'open'});
+  root.innerHTML = `
+    <style>
+      :host{display:block}
+      .stage{position:relative;min-height:520px;overflow:hidden;
+        background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+        border:1px solid rgba(255,255,255,.08); border-radius:16px;
+        box-shadow:0 10px 30px rgba(0,0,0,.45), inset 0 0 40px rgba(255,255,255,.03);
+      }
+      svg{width:100%;height:100%;display:block}
+      .edge{ stroke:#6aa8ff; stroke-opacity:.38; stroke-width:5; fill:none; filter:url(#edgeGlow) }
+      .edge.active{ stroke-opacity:.85; stroke-width:8 }
+      .edge.main{ stroke-width:10; stroke-opacity:.95 }
+      .node{ fill:#ffffff; stroke:#94c6ff; stroke-width:3; filter:url(#nodeGlow) }
+      .hit{ fill:transparent; pointer-events:all }
+            .label{ font-weight:800; font-size:14px; fill:#e8f0ff; paint-order:stroke; stroke:rgba(0,0,0,.55); stroke-width:3px; pointer-events:none }
+      .sublabel{ font-size:12px; fill:#a5b1cc; pointer-events:none }
+      .particle{ fill:#79ffe1; stroke:#cffff0; stroke-width:.6 }
+      .warping{ animation: warpBlink .6s ease-in-out 1 }
+      @keyframes warpBlink{0%{opacity:1;transform:scale(1)}35%{opacity:0;transform:scale(.25)}65%{opacity:0;transform:scale(.25)}100%{opacity:1;transform:scale(1)}}
+      .intent-stem{ stroke:url(#fluxGrad); stroke-width:8; stroke-opacity:.85; fill:none }
+      .intent-head{ fill:url(#fluxGrad); opacity:.9 }
+      .intent-core{ fill:none; stroke:#79ffe1; stroke-dasharray:5 6; stroke-opacity:.5 }
+    </style>
+
+    <div class="stage">
+      <svg id="graph" viewBox="0 0 1000 680" role="img" aria-labelledby="svgTitle svgDesc">
+        <title id="svgTitle">Warp Drive Interaction Graph</title>
+        <desc id="svgDesc">Core triangle + SFG ring; particle flows; CII intent bias.</desc>
+        <defs>
+          <filter id="edgeGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#6aa8ff" flood-opacity=".55"/>
+            <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#79ffe1" flood-opacity=".28"/>
+          </filter>
+          <filter id="nodeGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#ffffff" flood-opacity=".9"/>
+            <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#79ffe1" flood-opacity=".4"/>
+          </filter>
+          <linearGradient id="fluxGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#6aa8ff"/><stop offset="100%" stop-color="#79ffe1"/>
+          </linearGradient>
+          <marker id="arrowHead" viewBox="0 0 16 16" refX="8" refY="8" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+            <path d="M0,0 L16,8 L0,16 L4,8 Z" class="intent-head"/>
+          </marker>
+        </defs>
+        <g id="edges"></g>
+        <g id="particles"></g>
+        <g id="nodes"></g>
+        <g id="intentLayer"></g>
+      </svg>
+    </div>
+  `;
+
+  // ==== Scoped WarpDock logic ====
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = root.getElementById('graph');
+  const edgeLayer = root.getElementById('edges');
+  const particleLayer = root.getElementById('particles');
+  const nodeLayer = root.getElementById('nodes');
+  const intentLayer = root.getElementById('intentLayer');
+
+  // Nodes
+  const CORE = [
+    { id:'INC', label:'Inertial Null Core', sub:'Nullness • Stability', r:28, x:170, y:340 },
+    { id:'MEA', label:'Membrane Emitter Array', sub:'Gain • Density', r:26, x:430, y:130 },
+    { id:'HO',  label:'Harmonic Oscillator', sub:'Frequency • Q', r:26, x:770, y:340 },
+  ];
+  const CENTER = { x:500, y:340, R:150 };
+  const SFGS = Array.from({length:12}, (_,i) => {
+    const a = (i/12)*Math.PI*2;
+    return { id:`SFG${i+1}`, label:'SFG', sub:`Simulonic Field Gen #${i+1}`, r:18,
+             x: CENTER.x + CENTER.R*Math.cos(a),
+             y: CENTER.y + CENTER.R*Math.sin(a) };
+  });
+  const ALL = [...CORE, ...SFGS];
+
+  function makeNode(n){
+    const g = document.createElementNS(NS,'g');
+    g.classList.add('node-wrap'); g.dataset.id=n.id;
+    g.setAttribute('transform', `translate(${n.x},${n.y})`);
+    const hit = document.createElementNS(NS,'circle'); hit.setAttribute('class','hit'); hit.setAttribute('r', n.r+20);
+    const c   = document.createElementNS(NS,'circle'); c.setAttribute('class','node'); c.setAttribute('r', n.r);
+    const t1  = document.createElementNS(NS,'text');  t1.setAttribute('class','label'); t1.setAttribute('text-anchor','middle'); t1.setAttribute('dy', -(n.r+20)); t1.textContent = n.label;
+    const t2  = document.createElementNS(NS,'text');  t2.setAttribute('class','sublabel'); t2.setAttribute('text-anchor','middle'); t2.setAttribute('dy', n.r+22); t2.textContent = n.sub;
+    g.appendChild(hit); g.appendChild(c); g.appendChild(t1); g.appendChild(t2);
+    nodeLayer.appendChild(g);
+    n.g=g; n.hit=hit; n.circ=c;
+  }
+  ALL.forEach(makeNode);
+
+  // Drag core nodes
+  CORE.forEach(n=>{
+    let dragging=false, ox=0, oy=0;
+    n.hit.addEventListener('pointerdown', e=>{ dragging=true; e.target.setPointerCapture(e.pointerId); ox=e.clientX-n.x; oy=e.clientY-n.y; });
+    root.host.ownerDocument.defaultView.addEventListener('pointermove', e=>{
+      if(!dragging) return;
+      n.x = Math.max(40, Math.min(960, e.clientX - ox));
+      n.y = Math.max(60, Math.min(640, e.clientY - oy));
+      n.g.setAttribute('transform', `translate(${n.x},${n.y})`);
+      updateAllEdges(); updateIntentGraphics();
+    });
+    root.host.ownerDocument.defaultView.addEventListener('pointerup', ()=> dragging=false);
+  });
+
+  // Edges
+  const edges=[];
+  function bez(a,b,bulge=24){
+    const dx=b.x-a.x, dy=b.y-a.y, mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+    const len=Math.hypot(dx,dy)||1, ux=-dy/len, uy=dx/len;
+    const cx = mx + ux*bulge, cy = my + uy*bulge;
+    return `M ${a.x} ${a.y} Q ${cx} ${cy} ${b.x} ${b.y}`;
+  }
+  function addEdge(a,b, main=false){
+    const p = document.createElementNS(NS,'path');
+    p.setAttribute('class','edge' + (main?' main':'')); p.setAttribute('stroke','url(#fluxGrad)');
+    p.setAttribute('d', bez(a,b, main?40:24));
+    edgeLayer.appendChild(p);
+    edges.push({a,b,path:p,main});
+  }
+  addEdge(ALL.find(n=>n.id==='INC'), ALL.find(n=>n.id==='MEA'), true);
+  addEdge(ALL.find(n=>n.id==='MEA'), ALL.find(n=>n.id==='HO'),  true);
+  addEdge(ALL.find(n=>n.id==='HO'),  ALL.find(n=>n.id==='INC'), true);
+  for(let i=0;i<ALL.length;i++){
+    for(let j=i+1;j<ALL.length;j++){
+      const ia=ALL[i].id, jb=ALL[j].id;
+      const isMain = (ia==='INC'&&jb==='MEA')||(ia==='MEA'&&jb==='HO')||(ia==='HO'&&jb==='INC');
+      if(!isMain) addEdge(ALL[i], ALL[j], false);
+    }
+  }
+  function updateAllEdges(){ edges.forEach(e=> e.path.setAttribute('d', bez(e.a,e.b, e.main?40:24))); }
+
+  // Particles
+  const MAX_PARTICLES = 900;
+  const particles=[];
+  function spawnParticleOnPath(path, intensity=1){
+    if(particles.length >= MAX_PARTICLES){
+      const old = particles.shift();
+      if(old?.el?.parentNode) old.el.parentNode.removeChild(old.el);
+    }
+    const el = document.createElementNS(NS,'circle');
+    el.setAttribute('class','particle');
+    const baseR = 2.8;
+    el.setAttribute('r', (baseR + Math.random()*1.4*intensity).toFixed(2));
+    particleLayer.appendChild(el);
+    const p = { el, path, t: Math.random()*0.2, speed: 0.0022 + Math.random()*0.003*intensity };
+    particles.push(p);
+    try {
+      const len = path.getTotalLength();
+      const pt  = path.getPointAtLength(p.t * len);
+      el.setAttribute('cx', pt.x); el.setAttribute('cy', pt.y);
+      el.setAttribute('opacity', 0.55 + 0.4*(1-p.t));
+    } catch(e){}
+  }
+  function connectedEdgesOf(node){ return edges.filter(e=> e.a===node || e.b===node); }
+  function burstFromNode(node, magnitude=1){
+    const connected = connectedEdgesOf(node);
+    connected.forEach(e=> e.path.classList.add('active'));
+    setTimeout(()=> connected.forEach(e=> e.path.classList.remove('active')), 900);
+    const count = Math.floor(8 + 16*magnitude);
+    for(const e of connected){
+      for(let i=0;i<count;i++) spawnParticleOnPath(e.path, 0.9 + 0.6*magnitude);
+    }
+  }
+
+  // Intent vector graphics
+  function deg2rad(d){ return d*Math.PI/180; }
+  const intentStem = document.createElementNS(NS,'path');
+  intentStem.setAttribute('class','intent-stem'); intentStem.setAttribute('marker-end','url(#arrowHead)');
+  const intentCore = document.createElementNS(NS,'circle');
+  intentCore.setAttribute('class','intent-core'); intentCore.setAttribute('cx', CENTER.x); intentCore.setAttribute('cy', CENTER.y); intentCore.setAttribute('r', CENTER.R+18);
+  const intentLabel = document.createElementNS(NS,'text');
+  intentLabel.setAttribute('x', CENTER.x); intentLabel.setAttribute('y', CENTER.y- (CENTER.R+36));
+  intentLabel.setAttribute('text-anchor','middle'); intentLabel.setAttribute('class','label'); intentLabel.textContent='CII Intent';
+  intentLayer.appendChild(intentCore); intentLayer.appendChild(intentStem); intentLayer.appendChild(intentLabel);
+
+  // Internal (shadow) state derived from outside controls
+  const Outside = {
+    bias: 0.50,
+    flux: 0.80,
+    bearing: 0,
+    mag: 0.70,
+    gain: 0.60,
+    focus: 'all',
+    target: 'INC',
+    autoSteer: false
+  };
+
+  function intentVec(){
+    const th = deg2rad(Outside.bearing);
+    const m = Outside.mag;
+    return { x: Math.cos(th)*m, y: Math.sin(th)*m, th, m };
+  }
+  function updateIntentGraphics(){
+    const R = CENTER.R + 130;
+    const V = intentVec();
+    const x2 = CENTER.x + Math.cos(V.th)*R;
+    const y2 = CENTER.y + Math.sin(V.th)*R;
+    const scale = 0.35 + 0.65*V.m;
+    const xEnd = CENTER.x + (x2-CENTER.x)*scale;
+    const yEnd = CENTER.y + (y2-CENTER.y)*scale;
+    const ctrl = 0.18;
+    const cx = CENTER.x + (xEnd-CENTER.x)* (1-ctrl) - (yEnd-CENTER.y)*0.08;
+    const cy = CENTER.y + (yEnd-CENTER.y)* (1-ctrl) + (xEnd-CENTER.x)*0.08;
+    intentStem.setAttribute('d', `M ${CENTER.x} ${CENTER.y} Q ${cx} ${cy} ${xEnd} ${yEnd}`);
+  }
+  updateIntentGraphics();
+
+  function isCore(n){ return n.id==='INC'||n.id==='MEA'||n.id==='HO'; }
+  function isSFG(n){ return n.id.startsWith('SFG'); }
+  function nodeById(id){ return ALL.find(n=>n.id===id); }
+
+  function pickIntentWeightedEdge(){
+    const V = intentVec();
+    const g = Outside.gain;
+    const focus = Outside.focus;
+    const target = nodeById(Outside.target);
+    let total = 0;
+    const wts = new Array(edges.length).fill(0);
+    for(let i=0;i<edges.length;i++){
+      const e = edges[i];
+      if(focus==='core' && !(isCore(e.a) && isCore(e.b))) { wts[i]=0; continue; }
+      if(focus==='sfg' && !(isSFG(e.a) && isSFG(e.b))) { wts[i]=0; continue; }
+      if(focus==='target' && !(e.a===target || e.b===target)) { wts[i]=0; continue; }
+      const mx=(e.a.x+e.b.x)/2, my=(e.a.y+e.b.y)/2;
+      const ex = mx - CENTER.x, ey = my - CENTER.y;
+      const L = Math.hypot(ex,ey)||1; const dx = ex/L, dy = ey/L;
+      const align = Math.max(0, (dx*V.x + dy*V.y));
+      const base = 1;
+      const w = base * (1 + V.m * g * align);
+      wts[i]=w; total += w;
+    }
+    if(total<=0) return edges[(Math.random()*edges.length)|0];
+    let r = Math.random()*total;
+    for(let i=0;i<wts.length;i++){ r -= wts[i]; if(r<=0) return edges[i]; }
+    return edges[edges.length-1];
+  }
+
+  function continuousEmit(){
+    const f = Outside.flux;
+    const emitEdges = Math.floor(2 + f * 14);
+    for(let i=0;i<emitEdges;i++){
+      const e = pickIntentWeightedEdge();
+      const intensity = 0.6 + 0.9*f;
+      spawnParticleOnPath(e.path, intensity);
+    }
+  }
+
+  // Clicks: bursts & warp threshold
+  const warpCounter = Object.fromEntries(ALL.map(n=>[n.id,0]));
+  const WARP_THRESHOLD = 5;
+  function doWarp(n){
+    n.g.classList.add('warping');
+    setTimeout(()=> n.g.classList.remove('warping'), 620);
+    if(n.id.startsWith('SFG')){
+      const j=6; n.x += (Math.random()*2-1)*j; n.y += (Math.random()*2-1)*j;
+      n.g.setAttribute('transform', `translate(${n.x},${n.y})`);
+      updateAllEdges(); updateIntentGraphics();
+    }
+  }
+  ALL.forEach(n=>{
+    n.hit.addEventListener('click', (evt)=>{
+      burstFromNode(n, 1.2);
+      warpCounter[n.id] += 1;
+      if(warpCounter[n.id] >= WARP_THRESHOLD){ warpCounter[n.id]=0; doWarp(n); }
+      if(evt.shiftKey){ Outside.target = n.id; updateIntentGraphics(); setUIFromOutside(); }
+    });
+  });
+
+  // Metrics
+  function computeRingSymmetry(){
+    const targetR = CENTER.R; let acc = 0;
+    for(const s of SFGS){
+      const dr = Math.hypot(s.x-CENTER.x, s.y-CENTER.y) - targetR;
+      acc += Math.max(0, 1 - Math.min(1, Math.abs(dr)/20));
+    }
+    return acc / SFGS.length;
+  }
+  function computeIntentAlignment(){
+    const V = intentVec();
+    let ax=0, ay=0;
+    for(const s of SFGS){
+      const vx = s.x - CENTER.x, vy = s.y - CENTER.y;
+      const L = Math.hypot(vx,vy)||1;
+      ax += vx/L; ay += vy/L;
+    }
+    const L = Math.hypot(ax,ay)||1; ax/=L; ay/=L;
+    return Math.max(0, ax*V.x + ay*V.y);
+  }
+  function computeState(){
+    const particleFactor = Math.min(1, particles.length / MAX_PARTICLES);
+    const ringSymmetry   = computeRingSymmetry();
+    const intentAlign    = computeIntentAlignment();
+    const coupling = Math.max(0, Math.min(1, 0.26*particleFactor + 0.24*ringSymmetry + 0.35*(Outside.flux) + 0.15*intentAlign*(Outside.gain)/2 ));
+    const coherence= Math.max(0, Math.min(1, 0.42*ringSymmetry + 0.18*particleFactor + 0.30*(1 - Math.abs(Outside.bias-0.5)*2) + 0.10*intentAlign ));
+    let readiness='Idle', cls='warn';
+    if(coupling>0.75 && coherence>0.75){ readiness='Warp-Ready'; cls='ok' }
+    else if(coupling>0.5 && coherence>0.5){ readiness='Aligning'; cls='warn' }
+    else { readiness='Unstable'; cls='bad' }
+    return {coupling, coherence, readiness, cls};
+  }
+
+  // Auto-steer bearing toward worst ring deviation
+  function autoSteerUpdate(dt){
+    if(!Outside.autoSteer) return;
+    let worst=null, worstErr=-1;
+    const R = CENTER.R;
+    for(const s of SFGS){
+      const dr = Math.abs(Math.hypot(s.x-CENTER.x, s.y-CENTER.y)-R);
+      if(dr>worstErr){ worstErr=dr; worst=s; }
+    }
+    if(!worst) return;
+    const ang = Math.atan2(CENTER.y - worst.y, CENTER.x - worst.x);
+    let current = (Outside.bearing*Math.PI/180);
+    let diff = ((ang - current + Math.PI*3) % (Math.PI*2)) - Math.PI;
+    const rate = 0.9;
+    const step = Math.max(-rate*dt, Math.min(rate*dt, diff));
+    current += step;
+    let deg = current*180/Math.PI; if(deg<0) deg+=360;
+    Outside.bearing = (deg % 360);
+    updateIntentGraphics();
+  }
+
+  // Animation
+  let running=true, last=performance.now()/1000;
+  function tick(ms){
+    const now=ms/1000, dt=Math.min(0.05, now-last); last=now;
+    continuousEmit();
+    for(let i=particles.length-1;i>=0;i--){
+      const p=particles[i];
+      const speedScale = 0.35 + 1.6*(Outside.flux);
+      p.t += p.speed * speedScale * (1 + 0.25*Math.sin(now*2 + i));
+      if(p.t>=1){ if(p.el?.parentNode) p.el.parentNode.removeChild(p.el); particles.splice(i,1); continue; }
+      try{ const len=p.path.getTotalLength(); const pt=p.path.getPointAtLength(p.t*len); p.el.setAttribute('cx',pt.x); p.el.setAttribute('cy',pt.y); p.el.setAttribute('opacity',0.6+0.35*(1-p.t)); }catch(e){}
+    }
+    autoSteerUpdate(dt);
+    const S = computeState();
+    // push meters to outer UI
+    if(window.__warpMeters){
+      const {coupling, coherence, readiness, cls} = S;
+      __warpMeters.coupling.textContent=coupling.toFixed(2);
+      __warpMeters.coherence.textContent=coherence.toFixed(2);
+      __warpMeters.readiness.textContent=readiness;
+      __warpMeters.readiness.className='v ' + (cls==='ok'?'ok':cls==='warn'?'warn':'bad');
+    }
+    if(running) requestAnimationFrame(tick);
+  }
+  // Seed particles
+  for(let i=0;i<200;i++){ const e = edges[(Math.random()*edges.length)|0]; spawnParticleOnPath(e.path, 0.9); }
+  requestAnimationFrame(tick);
+
+  // ---- Bridge to bottom controls (light DOM) ----
+  // Expose setters the outer UI can call.
+  window.__warpSet = function setWarpControls(next){
+    Object.assign(Outside, next);
+    updateIntentGraphics();
+  };
+  window.__warpBurstNode = function(id){
+    const n = nodeById(id) || ALL[0];
+    burstFromNode(n, 1.5);
+  };
+  window.__warpToggle = function(){
+    running = !running;
+    if(running){ last=performance.now()/1000; requestAnimationFrame(tick); }
+    return running;
+  };
+  window.__warpReset = function(){
+    Object.keys(warpCounter).forEach(k=> warpCounter[k]=0);
+    SFGS.forEach((s,i)=>{ const a=(i/12)*Math.PI*2; s.x=CENTER.x + CENTER.R*Math.cos(a); s.y=CENTER.y + CENTER.R*Math.sin(a); s.g.setAttribute('transform',`translate(${s.x},${s.y})`); });
+    updateAllEdges(); updateIntentGraphics();
+  };
+
+})(); // end mountWarpDock
+
+/* ===== Build Warp controls in bottom-right panel and wire to shadow ===== */
+(function buildWarpControls(){
+  const wrap = $('warpControls');
+  wrap.innerHTML = `
+    <div class="h">WarpDock Controls</div>
+    <div class="row"><span class="muted">Resonance Bias</span><input id="w_bias" type="range" min="0" max="1" step="0.01" value="0.50" style="flex:1"><output class="mono" id="wo_bias">0.50</output></div>
+    <div class="row"><span class="muted">Flux Intensity</span><input id="w_flux" type="range" min="0" max="1" step="0.01" value="0.80" style="flex:1"><output class="mono" id="wo_flux">0.80</output></div>
+    <div class="row"><span class="muted">Bearing (°)</span><input id="w_bearing" type="range" min="0" max="360" step="1" value="0" style="flex:1"><output class="mono" id="wo_bearing">0</output></div>
+    <div class="row"><span class="muted">Magnitude</span><input id="w_mag" type="range" min="0" max="1" step="0.01" value="0.70" style="flex:1"><output class="mono" id="wo_mag">0.70</output></div>
+    <div class="row"><span class="muted">Gain</span><input id="w_gain" type="range" min="0" max="2" step="0.01" value="0.60" style="flex:1"><output class="mono" id="wo_gain">0.60</output></div>
+    <div class="row">
+      <span class="muted">Focus</span>
+      <select id="w_focus" style="flex:1">
+        <option value="all">All Links</option>
+        <option value="core">Core Triangle</option>
+        <option value="sfg">SFG Ring</option>
+        <option value="target">Toward Target Node</option>
+      </select>
+    </div>
+    <div class="row">
+      <span class="muted">Target Node</span>
+      <select id="w_target" style="flex:1">
+        <option value="INC">INC</option><option value="MEA">MEA</option><option value="HO">HO</option>
+        <option value="SFG1">SFG1</option><option value="SFG2">SFG2</option><option value="SFG3">SFG3</option><option value="SFG4">SFG4</option>
+        <option value="SFG5">SFG5</option><option value="SFG6">SFG6</option><option value="SFG7">SFG7</option><option value="SFG8">SFG8</option>
+        <option value="SFG9">SFG9</option><option value="SFG10">SFG10</option><option value="SFG11">SFG11</option><option value="SFG12">SFG12</option>
+      </select>
+    </div>
+    <div class="row" style="gap:12px;flex-wrap:wrap">
+      <label class="muted" style="display:flex;align-items:center;gap:8px"><input id="w_auto" type="checkbox"> Auto-steer</label>
+      <button class="btn mini" id="w_pulse">Intent Pulse</button>
+      <button class="btn mini" id="w_burst">Global Burst</button>
+      <button class="btn" id="w_toggle">Pause</button>
+      <button class="btn mini" id="w_reset">Reset</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
+      <div class="panel" style="padding:8px;text-align:center"><div>Coupling</div><div class="v mono" id="m_coupling">0.00</div></div>
+      <div class="panel" style="padding:8px;text-align:center"><div>Coherence</div><div class="v mono" id="m_coherence">0.00</div></div>
+      <div class="panel" style="padding:8px;text-align:center"><div>Warp Readiness</div><div class="v mono" id="m_readiness">Idle</div></div>
+    </div>
+  `;
+
+  // cache meter els for shadow loop updates
+  window.__warpMeters = {
+    coupling: document.getElementById('m_coupling'),
+    coherence: document.getElementById('m_coherence'),
+    readiness: document.getElementById('m_readiness')
+  };
+
+  // helpers
+  function push(){
+    window.__warpSet?.({
+      bias: +bias.value,
+      flux: +flux.value,
+      bearing: +bearing.value,
+      mag: +mag.value,
+      gain: +gain.value,
+      focus: focus.value,
+      target: target.value,
+      autoSteer: auto.checked
+    });
+  }
+  // elements
+  const bias=$('w_bias'), flux=$('w_flux'), bearing=$('w_bearing'), mag=$('w_mag'), gain=$('w_gain');
+  const obias=$('wo_bias'), oflux=$('wo_flux'), obear=$('wo_bearing'), omag=$('wo_mag'), ogain=$('wo_gain');
+  const focus=$('w_focus'), target=$('w_target'), auto=$('w_auto');
+  const pulse=$('w_pulse'), burst=$('w_burst'), toggleBtn=$('w_toggle'), reset=$('w_reset');
+
+  // bind
+  ;[bias,flux,bearing,mag,gain].forEach(el=>{
+    el.addEventListener('input', ()=>{
+      if(el===bias) obias.textContent=(+bias.value).toFixed(2);
+      if(el===flux) oflux.textContent=(+flux.value).toFixed(2);
+      if(el===bearing) obear.textContent=bearing.value;
+      if(el===mag) omag.textContent=(+mag.value).toFixed(2);
+      if(el===gain) ogain.textContent=(+gain.value).toFixed(2);
+      push();
+    });
+  });
+  ;[focus,target,auto].forEach(el=> el.addEventListener('change', push));
+
+  pulse.addEventListener('click', ()=> window.__warpBurstNode?.(target.value));
+  burst.addEventListener('click', ()=>{
+    ['INC','MEA','HO','SFG1','SFG2','SFG3','SFG4','SFG5','SFG6','SFG7','SFG8','SFG9','SFG10','SFG11','SFG12'].forEach(id=> window.__warpBurstNode?.(id));
+  });
+  toggleBtn.addEventListener('click', ()=>{
+    const running = window.__warpToggle?.();
+    toggleBtn.textContent = running ? 'Pause' : 'Resume';
+  });
+  reset.addEventListener('click', ()=>{
+    window.__warpReset?.();
+  });
+
+  // initial push
+  push();
+})(); // end warp controls build
 </script>
 </body>
 </html>
+
