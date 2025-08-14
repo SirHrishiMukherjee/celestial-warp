@@ -255,7 +255,7 @@ function skyVec(azDeg,altDeg){ const az=toRad(azDeg), alt=toRad(altDeg); const c
 function dot(a,b){return a.x*b.x+a.y*b.y+a.z*b.z;}
 
 /* ===== State ===== */
-const DIMENSIONS=['Dynasty','Empire','Family','Field'];
+const DIMENSIONS=['Dynasty','Empire','Family','Field', 'Star'];
 let outlook=Object.fromEntries(DIMENSIONS.map(d=>[d,+1]));
 let seed=42, points=[], weights=[], lockSet=new Set();
 const globe={lon0:0,lat0:15,dragging:false,lastX:0,lastY:0};
