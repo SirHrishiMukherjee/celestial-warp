@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Celestial • Intent Sextant + WarpDock • Mnality</title>
+<title>Celestial • Intent Sextant + WarpDock</title>
 <style>
   :root{--bg:#0f1115;--panel:#161a22;--card:#1c2230;--text:#e8eef7;--muted:#9bb0c8;--accent:#61dafb;--good:#6ee7a6;--warn:#fbbf24;--grid:#2a3242;--hl:#9f7aea;--bad:#f87171}
   *{box-sizing:border-box}
@@ -13,21 +13,19 @@
   .logo{width:36px;height:36px;border-radius:10px;background:radial-gradient(circle at 30% 30%,#7cfcff,#4c50ff 45%,#1f1340 70%);box-shadow:0 0 24px rgba(97,218,251,.35),inset 0 0 18px rgba(255,255,255,.12)}
   .title{font-weight:700}.sub{font-size:12px;color:var(--muted)}
 
-  /* ---- 3-col grid layout (adds Mnality card) ---- */
-  #app{
-    display:grid;gap:14px;padding:12px;
-    grid-template-columns:1fr 1fr 1fr;
-    grid-template-rows:minmax(440px,40vh) auto;
-    grid-template-areas:
-      "sky warp mn"
-      "controls controls controls";
-  }
+  /* ---- New grid layout ---- */
+  #app{display:grid;gap:14px;padding:12px;
+       grid-template-columns:1fr 1fr;
+       grid-template-rows:minmax(440px,40vh) auto;
+       grid-template-areas:
+         "sky warp"
+         "controls controls";}
   #skyCard{grid-area:sky}
   #warpCard{grid-area:warp}
-  #mnalityCard{grid-area:mn}
   #controlsRow{grid-area:controls; display:grid; gap:14px; grid-template-columns:1fr 1fr;}
-  @media (max-width: 1400px){
-    #app{grid-template-columns:1fr; grid-template-rows:auto; grid-template-areas:"sky" "warp" "mn" "controls";}
+  @media (max-width: 1200px){
+    #app{grid-template-columns:1fr; grid-template-rows:minmax(360px,40vh) minmax(360px,40vh) auto;
+         grid-template-areas:"sky" "warp" "controls";}
     #controlsRow{grid-template-columns:1fr}
   }
 
@@ -71,17 +69,6 @@
   #warpHostTitle .dot{width:7px;height:7px;border-radius:50%;background:#79ffe1;box-shadow:0 0 12px rgba(121,255,225,.45)}
   #warpHostTitle .t{font-weight:800;letter-spacing:.4px}
 
-  /* ===== Mnality Card ===== */
-  .mnCardHead{display:flex;align-items:center;justify-content:space-between;padding:0px 0px;border-bottom:1px solid #232a3a}
-  .mnTitle{font-weight:800}
-  #mnSymbolWrap{display:flex;align-items:center;justify-content:center;height:340px;padding:8px}
-  #mn_symbol{position:relative;width:320px;height:420px;display:flex;align-items:flex-end;justify-content:center;cursor:pointer;transform:rotate(180deg)}
-  .mn_input{position:absolute;bottom:0;width:6px;height:150px;background:#6ef;z-index:2;border-radius:2px}
-  .mn_out{position:absolute;width:4px;height:110px;background:#89a;border-radius:50%;transform-origin:top center;transition:background .3s, box-shadow .3s}
-  .mn_lit{background:#6ef !important;box-shadow:0 0 12px #6ef}
-  #mnCtrls .row label{min-width:170px}
-  #mnFooter{position:relative;text-align:center;color:#aab3c9;font-size:12px;margin-top:8px}
-  #mn_yearFlash{position:absolute;left:50%;transform:translateX(-50%);font-size:28px;opacity:0;pointer-events:none}
 </style>
 </head>
 <body>
@@ -126,7 +113,7 @@
     </div>
   </div>
 
-  <!-- Upper middle: Warp stage -->
+  <!-- Upper right: Warp stage (shadow DOM draws here) -->
   <div id="warpCard" class="card visual">
     <div class="visualPad">
       <div id="warpHostTitle"><div class="dot"></div>
@@ -134,37 +121,6 @@
         <div class="sub" style="margin-left:auto;">CII routing • particle flux • intent bias</div>
       </div>
       <div id="warpMount"></div>
-    </div>
-  </div>
-
-  <!-- Upper right: Mnality -->
-  <div id="mnalityCard" class="card">
-    <div class="mnCardHead">
-      <div class="mnTitle">Simulon Mnality</div>
-      <div class="sub">Dual curvilinear outputs • 2→256</div>
-    </div>
-    <div id="mnSymbolWrap">
-      <div id="mn_symbol" title="Toggle symbol">
-        <div class="mn_input"></div>
-      </div>
-    </div>
-    <div id="mnCtrls" class="panel" style="margin:10px">
-      <div class="h">Mnality Controls</div>
-      <div class="row">
-        <label>Output Dimensionality: <span id="mn_strandCount" class="mono">3</span></label>
-      </div>
-      <div class="row">
-        <input type="range" id="mn_range" min="2" max="256" value="3" />
-      </div>
-      <div class="row">
-        <input type="number" id="mn_number" min="2" max="256" value="3" style="width:110px" />
-        <button class="btn" id="mn_light">Light Random Strand</button>
-      </div>
-      <div id="mnFooter">
-        <span id="mn_copyright">&copy; Hrishi Mukherjee Horizons 2028</span>
-        <div id="mn_yearFlash">2028</div>
-      </div>
-      <div class="note">Tip: click strands to light them; footer flashes the active year using the strand color.</div>
     </div>
   </div>
 
@@ -248,7 +204,7 @@ function fitCanvas(){
 }
 addEventListener('resize',fitCanvas,{passive:true});
 
-/* ===== roundRect polyfill ===== */
+/* ====== roundRect polyfill ====== */
 if (!CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
     const rr = Array.isArray(r) ? r : [r, r, r, r].map(v => Math.max(0, v || 0));
@@ -416,7 +372,7 @@ function buildART(){
   const maxS=points.reduce((m,p)=>Math.max(m,p.sal),1e-6); for(const p of points){p.sal/=maxS;}
   recomputeWeights();
   lockSet.clear();
-  if(cfg.lockTopK>0){ const top=[...points.map((p,i)=>[p.sal,i])].sort((a,b)=>b[0]-a[0]).slice(0,Math.max(3,Math.floor(points.length*0.02))).map(x=>x[1]); for(const i of top) lockSet.add(i); }
+  if(cfg.lockTopK>0){ const top=[...points.map((p,i)=>[p.sal,i])].sort((a,b)=>b[0]-a[0]).slice(0,cfg.lockTopK).map(x=>x[1]); for(const i of top) lockSet.add(i); }
   E.statPos.textContent=pos; E.statNeg.textContent=neg;
 }
 function ensurePoints(){ if(!points || !Array.isArray(points) || points.length===0){ buildART(); } }
@@ -642,7 +598,7 @@ initCelestial();
       .edge.main{ stroke-width:10; stroke-opacity:.95 }
       .node{ fill:#ffffff; stroke:#94c6ff; stroke-width:3; filter:url(#nodeGlow) }
       .hit{ fill:transparent; pointer-events:all }
-      .label{ font-weight:800; font-size:14px; fill:#e8f0ff; paint-order:stroke; stroke:rgba(0,0,0,.55); stroke-width:3px; pointer-events:none }
+            .label{ font-weight:800; font-size:14px; fill:#e8f0ff; paint-order:stroke; stroke:rgba(0,0,0,.55); stroke-width:3px; pointer-events:none }
       .sublabel{ font-size:12px; fill:#a5b1cc; pointer-events:none }
       .particle{ fill:#79ffe1; stroke:#cffff0; stroke-width:.6 }
       .warping{ animation: warpBlink .6s ease-in-out 1 }
@@ -665,7 +621,7 @@ initCelestial();
             <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#ffffff" flood-opacity=".9"/>
             <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#79ffe1" flood-opacity=".4"/>
           </filter>
-          <linearGradient id="fluxGrad" x1="0%" y1="0%" x2="100%">
+          <linearGradient id="fluxGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="#6aa8ff"/><stop offset="100%" stop-color="#79ffe1"/>
           </linearGradient>
           <marker id="arrowHead" viewBox="0 0 16 16" refX="8" refY="8" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
@@ -823,7 +779,6 @@ initCelestial();
     const R = CENTER.R + 130;
     const V = intentVec();
     const x2 = CENTER.x + Math.cos(V.th)*R;
-    aconst = 0; // keep scope clean in template string
     const y2 = CENTER.y + Math.sin(V.th)*R;
     const scale = 0.35 + 0.65*V.m;
     const xEnd = CENTER.x + (x2-CENTER.x)*scale;
@@ -900,7 +855,7 @@ initCelestial();
   function computeRingSymmetry(){
     const targetR = CENTER.R; let acc = 0;
     for(const s of SFGS){
-      const dr = Math.abs(Math.hypot(s.x-CENTER.x, s.y-CENTER.y)-targetR);
+      const dr = Math.hypot(s.x-CENTER.x, s.y-CENTER.y) - targetR;
       acc += Math.max(0, 1 - Math.min(1, Math.abs(dr)/20));
     }
     return acc / SFGS.length;
@@ -979,6 +934,7 @@ initCelestial();
   requestAnimationFrame(tick);
 
   // ---- Bridge to bottom controls (light DOM) ----
+  // Expose setters the outer UI can call.
   window.__warpSet = function setWarpControls(next){
     Object.assign(Outside, next);
     updateIntentGraphics();
@@ -998,10 +954,6 @@ initCelestial();
     updateAllEdges(); updateIntentGraphics();
   };
 
-  // Local helper for shift-click targeting:
-  function setUIFromOutside(){
-    const tgt = document.getElementById('w_target'); if(tgt){ tgt.value = Outside.target; }
-  }
 })(); // end mountWarpDock
 
 /* ===== Build Warp controls in bottom-right panel and wire to shadow ===== */
@@ -1066,7 +1018,6 @@ initCelestial();
       autoSteer: auto.checked
     });
   }
-
   // elements
   const bias=$('w_bias'), flux=$('w_flux'), bearing=$('w_bearing'), mag=$('w_mag'), gain=$('w_gain');
   const obias=$('wo_bias'), oflux=$('wo_flux'), obear=$('wo_bearing'), omag=$('wo_mag'), ogain=$('wo_gain');
@@ -1101,119 +1052,6 @@ initCelestial();
   // initial push
   push();
 })(); // end warp controls build
-
-/* ===== Fix a tiny var typo introduced above ===== */
-(function fixIntentStemBug(){
-  // In mountWarpDock() we accidentally left `aconst = 0` which would throw in strict mode.
-  // Nothing to do here because it was declared as a plain identifier; make sure no global leak:
-  if(typeof aconst!=='undefined'){ try{ delete window.aconst; }catch(e){} }
-})();
-
-/* ===== Mnality: integrate first snippet into the right-side card ===== */
-(function initMnality(){
-  const elWrap = $('mn_symbol');
-  const elCount = $('mn_strandCount');
-  const rRange = $('mn_range');
-  const nNumber = $('mn_number');
-  const btnLight = $('mn_light');
-  const copyright = $('mn_copyright');
-  const yearFlash = $('mn_yearFlash');
-
-  let strandCount = 3;
-
-  function clampStrands(v){
-    const val = Math.min(Math.max(2, parseInt(v||2,10)), 256);
-    return val;
-  }
-
-  function flashYear(color="#6ef"){
-    yearFlash.style.color = color;
-    yearFlash.style.opacity = 1;
-    yearFlash.style.transition = "opacity 0.5s ease-out, transform 0.5s ease-out";
-    yearFlash.style.transform = "translateX(-50%) scale(1.08)";
-    setTimeout(()=>{
-      yearFlash.style.opacity = 0;
-      yearFlash.style.transform = "translateX(-50%) scale(1)";
-    }, 520);
-  }
-
-  function updateCopyrightYear(){
-    const year = 2025 + strandCount;
-    copyright.innerHTML = `&copy; Hrishi Mukherjee Horizons ${year}`;
-    yearFlash.textContent = year;
-  }
-
-  function clearStrands(){
-    [...elWrap.querySelectorAll('.mn_out')].forEach(e=>e.remove());
-  }
-
-  function renderStrands(){
-    clearStrands();
-    const originX = elWrap.clientWidth / 2;
-    const originY = elWrap.clientHeight - 150; // matches input height
-    for(let i=0;i<strandCount;i++){
-      const strand = document.createElement('div');
-      strand.className = 'mn_out';
-      const angle = (Math.PI / 2) * (i / (strandCount - 1)) - Math.PI / 4;
-      const dx = 100 * Math.sin(angle);
-      const dy = 100 * Math.cos(angle);
-      strand.style.top = `${originY}px`;
-      strand.style.left = `${originX + dx}px`;
-      strand.style.transform = `rotate(${angle * 180 / Math.PI}deg)`;
-      strand.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        strand.classList.toggle('mn_lit');
-        // color flash picks from computed bg (approx)
-        flashYear('#6ef');
-        // Small bridge: nudge Intent magnitude based on lit ratio
-        try{
-          const lit = elWrap.querySelectorAll('.mn_out.mn_lit').length;
-          const frac = Math.max(0.05, Math.min(1, lit/strandCount));
-          intent.mag = frac; E.rngMag.value = frac; E.labMag.textContent = intent.mag.toFixed(2);
-          buildART(); ensurePoints(); computeSkyAutoTarget();
-          // also push to WarpDock bearing subtly from strand index
-          const newBearing = (intent.bearing + (i*7)) % 360;
-          intent.bearing = newBearing; E.rngBearing.value=newBearing; E.labBearing.textContent = `${Math.round(newBearing)}°`;
-          window.__warpSet?.({ bearing:newBearing, mag:frac, gain:intent.gain });
-        }catch(_){}
-      });
-      elWrap.appendChild(strand);
-    }
-  }
-
-  function syncInputs(v){
-    strandCount = clampStrands(v);
-    rRange.value = strandCount;
-    nNumber.value = strandCount;
-    elCount.textContent = strandCount;
-    updateCopyrightYear();
-    renderStrands();
-  }
-
-  function lightRandomStrand(){
-    const strands = elWrap.querySelectorAll('.mn_out');
-    if(!strands.length) return;
-    const idx = (Math.random()*strands.length)|0;
-    const s = strands[idx];
-    s.classList.add('mn_lit');
-    flashYear('#6ef');
-    // emit a Warp burst to tie UX together
-    window.__warpBurstNode?.(['INC','MEA','HO','SFG1','SFG5','SFG9'][idx%6]);
-  }
-
-  // symbol click toggles a subtle glow (cosmetic)
-  elWrap.addEventListener('click', ()=>{
-    elWrap.classList.toggle('mn_lit');
-  });
-
-  rRange.addEventListener('input', e=> syncInputs(e.target.value));
-  nNumber.addEventListener('input', e=> syncInputs(e.target.value));
-  btnLight.addEventListener('click', lightRandomStrand);
-
-  // initial
-  syncInputs(3);
-})(); // end Mnality init
-
 </script>
 </body>
 </html>
